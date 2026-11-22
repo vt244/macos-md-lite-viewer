@@ -72,6 +72,29 @@ enum MarkdownTests {
         try check(extensions.contains("<pre data-mermaid><span class=\"code-language\">mermaid</span>"), extensions)
         try check(extensions.contains("A[&quot;&lt;em&gt;Source&lt;/em&gt;&quot;] --&gt; B"), extensions)
 
+        let quickLook = try MarkdownRenderer.body(for: """
+        ```mermaid
+        flowchart LR
+          A["<Start>"] -->|approve| B[End] --> C[Next]
+        ```
+
+        ```mermaid
+        sequenceDiagram
+          participant A as Reader
+          A->>B: Open
+          B-->>A: Preview
+        ```
+
+        ```mermaid
+        classDiagram
+          class Example
+        ```
+        """, drawDiagram: QuickLookDiagram.render)
+        try check(quickLook.components(separatedBy: "class=\"quicklook-diagram\"").count == 3, quickLook)
+        try check(quickLook.contains("&lt;Start&gt;") && quickLook.contains(">approve</text>"), quickLook)
+        try check(quickLook.contains(">Reader</text>") && quickLook.contains(">Preview</text>"), quickLook)
+        try check(quickLook.contains("<pre data-mermaid>") && quickLook.contains("classDiagram"), quickLook)
+
         let empty = try MarkdownRenderer.body(for: "")
         try check(empty.isEmpty, "Empty Markdown should return an empty body")
 

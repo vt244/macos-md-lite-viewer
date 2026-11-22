@@ -14,6 +14,7 @@ shared_sources=(Sources/L10n.swift Sources/MarkdownDocument.swift Sources/Markdo
 swiftc "${swift_flags[@]}" "${shared_sources[@]}" Sources/ViewerWindow.swift Sources/main.swift \
     -o "$app/Contents/MacOS/MarkdownViewer"
 swiftc "${swift_flags[@]}" "${shared_sources[@]}" Extensions/QuickLook/PreviewProvider.swift \
+    Extensions/QuickLook/QuickLookDiagram.swift \
     -application-extension -parse-as-library -module-name MarkdownQuickLook \
     -Xlinker -e -Xlinker _NSExtensionMain -o "$extension/Contents/MacOS/MarkdownQuickLook"
 
