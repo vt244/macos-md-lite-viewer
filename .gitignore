@@ -1,0 +1,55 @@
+# Swift builds and temporary files
+/.build/
+/.tmp/
+/DerivedData/
+.swiftpm/xcode/package.xcworkspace/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+.DocumentRevisions-V100/
+.VolumeIcon.icns
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux and editor backups
+.directory
+.Trash-*/
+.nfs*
+*~
+*.swp
+*.swo
+
+# Xcode, VS Code, JetBrains, and Sublime Text
+xcuserdata/
+*.xcuserstate
+/.vscode/
+/.idea/
+*.iml
+*.sublime-workspace
+
+# Local AI agent state and settings
+/.agents/
+/.codex/
+/.claude/
+/.claude.json
+/CLAUDE.local.md
+/.cursor/
+/.windsurf/
+/.gemini/
+/.qwen/
+/.continue/
+/.roo/
+/.aider*
+/.opencode/
+/AGENTS.md
