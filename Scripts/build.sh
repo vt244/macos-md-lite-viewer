@@ -30,6 +30,7 @@ install_resources() {
 
 install_resources "$app" Resources/Info.plist
 install_resources "$extension" Extensions/QuickLook/Info.plist
+cp Resources/AppIcon.icns "$app/Contents/Resources/"
 cp Resources/RenderMermaid.js Resources/ThirdParty/* "$app/Contents/Resources/"
 for asset in RenderMermaid.js mermaid.min.js Mermaid-LICENSES.txt; do
     rm -f "$extension/Contents/Resources/$asset"
