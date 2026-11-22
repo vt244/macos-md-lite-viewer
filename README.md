@@ -24,9 +24,11 @@ open -a "$PWD/.build/Markdown Viewer.app" README.md
 - Просмотрщик поддерживает заголовки и ссылки на них, списки, цитаты, таблицы, блоки кода и локальные изображения PNG, JPEG, GIF и WebP в папке документа и её подпапках. Тема следует настройкам macOS.
 - Документы открываются в режиме чтения. Поддерживаются UTF-8 и UTF-16 с BOM, до 16 МБ на документ. Встроенный HTML отображается как текст, для сетевых изображений показывается текстовое описание. Веб-ссылки открываются в браузере.
 
+Интерфейс следует языку приложения в macOS. Доступны английский и русский. Для остальных языков используется английский.
+
 ## Разработка
 
-Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра собирается в `Sources/PreviewPage.swift`. Оформление находится в `Resources/`.
+Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра собирается в `Sources/PreviewPage.swift`. Оформление и локализации находятся в `Resources/`.
 
 ```bash
 ./Scripts/test.sh

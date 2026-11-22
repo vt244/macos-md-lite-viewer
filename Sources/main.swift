@@ -26,8 +26,8 @@ final class ViewerApplication: NSObject, NSApplicationDelegate {
     @objc private func chooseFile(_ sender: Any? = nil) {
         guard openPanel == nil else { return }
         let panel = NSOpenPanel()
-        panel.title = "Открыть Markdown"
-        panel.message = "Выберите один или несколько файлов Markdown."
+        panel.title = L10n.text("panel.title")
+        panel.message = L10n.text("panel.message")
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
         panel.allowedContentTypes = MarkdownDocument.extensions.compactMap { UTType(filenameExtension: $0) }
@@ -92,25 +92,25 @@ final class ViewerApplication: NSObject, NSApplicationDelegate {
         }
 
         menu("Markdown Viewer", items: [
-            item("О Markdown Viewer", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), "", target: NSApp),
+            item(L10n.text("menu.about"), #selector(NSApplication.orderFrontStandardAboutPanel(_:)), "", target: NSApp),
             .separator(),
-            item("Завершить Markdown Viewer", #selector(NSApplication.terminate(_:)), "q", target: NSApp)
+            item(L10n.text("menu.quit"), #selector(NSApplication.terminate(_:)), "q", target: NSApp)
         ])
-        menu("Файл", items: [
-            item("Открыть…", #selector(chooseFile(_:)), "o", target: self),
-            item("Перечитать файл", #selector(ViewerWindow.reloadDocument(_:)), "r"),
+        menu(L10n.text("menu.file"), items: [
+            item(L10n.text("menu.open"), #selector(chooseFile(_:)), "o", target: self),
+            item(L10n.text("menu.reload"), #selector(ViewerWindow.reloadDocument(_:)), "r"),
             .separator(),
-            item("Закрыть окно", #selector(NSWindow.performClose(_:)), "w")
+            item(L10n.text("menu.close"), #selector(NSWindow.performClose(_:)), "w")
         ])
-        menu("Правка", items: [
-            item("Вырезать", #selector(NSText.cut(_:)), "x"),
-            item("Копировать", #selector(NSText.copy(_:)), "c"),
-            item("Вставить", #selector(NSText.paste(_:)), "v"),
-            item("Выделить всё", #selector(NSResponder.selectAll(_:)), "a"),
+        menu(L10n.text("menu.edit"), items: [
+            item(L10n.text("menu.cut"), #selector(NSText.cut(_:)), "x"),
+            item(L10n.text("menu.copy"), #selector(NSText.copy(_:)), "c"),
+            item(L10n.text("menu.paste"), #selector(NSText.paste(_:)), "v"),
+            item(L10n.text("menu.selectAll"), #selector(NSResponder.selectAll(_:)), "a"),
             .separator(),
-            item("Найти…", #selector(ViewerWindow.focusSearch(_:)), "f"),
-            item("Найти далее", #selector(ViewerWindow.findNext(_:)), "g"),
-            item("Найти ранее", #selector(ViewerWindow.findPrevious(_:)), "g", modifiers: [.command, .shift])
+            item(L10n.text("menu.find"), #selector(ViewerWindow.focusSearch(_:)), "f"),
+            item(L10n.text("menu.findNext"), #selector(ViewerWindow.findNext(_:)), "g"),
+            item(L10n.text("menu.findPrevious"), #selector(ViewerWindow.findPrevious(_:)), "g", modifiers: [.command, .shift])
         ])
         NSApp.mainMenu = main
     }
