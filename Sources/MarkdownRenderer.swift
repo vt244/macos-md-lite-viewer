@@ -2,7 +2,7 @@ import Foundation
 
 enum MarkdownRenderer {
     static func body(
-        for source: String, document: URL? = nil
+        for source: String, document: URL? = nil, drawDiagram: ((String, Int) -> String?)? = nil
     ) throws -> String {
         let hasTaskMarkers = source.contains("[ ]") || source.contains("[x]") || source.contains("[X]")
         let options = AttributedString.MarkdownParsingOptions(appliesSourcePositionAttributes: hasTaskMarkers)
@@ -29,11 +29,15 @@ enum MarkdownRenderer {
                 switch block.kind {
                 case let .codeBlock(language):
                     let isMermaid = language?.trimmingCharacters(in: .whitespaces).lowercased() == "mermaid"
-                    html += isMermaid ? "<pre data-mermaid>" : "<pre>"
-                    if let language, !language.isEmpty {
-                        html += "<span class=\"code-language\">\(escape(language))</span>"
+                    if isMermaid, let diagram = drawDiagram?(codeSource, block.identity) {
+                        html += diagram
+                    } else {
+                        html += isMermaid ? "<pre data-mermaid>" : "<pre>"
+                        if let language, !language.isEmpty {
+                            html += "<span class=\"code-language\">\(escape(language))</span>"
+                        }
+                        html += "<code>\(escape(codeSource))</code></pre>"
                     }
-                    html += "<code>\(escape(codeSource))</code></pre>"
                 case .table: html += "</table></div>"
                 case .tableHeaderRow, .tableRow:
                     let columns = tableColumns(in: stack)

@@ -10,7 +10,7 @@ trap 'rm -rf "$fixtures"' EXIT
 
 swiftc -target "$(uname -m)-apple-macosx13.0" -module-cache-path "$build/module-cache" \
     Sources/L10n.swift Sources/MarkdownRenderer.swift Sources/MarkdownDocument.swift \
-    Tests/MarkdownTests.swift \
+    Extensions/QuickLook/QuickLookDiagram.swift Tests/MarkdownTests.swift \
     -o "$build/MarkdownTests"
 "$build/MarkdownTests" "$fixtures"
 
