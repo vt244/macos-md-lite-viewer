@@ -14,4 +14,4 @@ swiftc -target "$(uname -m)-apple-macosx13.0" -module-cache-path "$build/module-
     -o "$build/MarkdownTests"
 "$build/MarkdownTests" "$fixtures"
 
-plutil -lint Resources/Info.plist Resources/en.lproj/Localizable.strings Resources/ru.lproj/Localizable.strings
+plutil -lint Extensions/QuickLook/Info.plist Extensions/QuickLook/Entitlements.plist Resources/Info.plist Resources/en.lproj/Localizable.strings Resources/ru.lproj/Localizable.strings
