@@ -28,7 +28,8 @@ enum MarkdownRenderer {
             for block in stack[shared...].reversed() {
                 switch block.kind {
                 case let .codeBlock(language):
-                    html += "<pre>"
+                    let isMermaid = language?.trimmingCharacters(in: .whitespaces).lowercased() == "mermaid"
+                    html += isMermaid ? "<pre data-mermaid>" : "<pre>"
                     if let language, !language.isEmpty {
                         html += "<span class=\"code-language\">\(escape(language))</span>"
                     }

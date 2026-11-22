@@ -23,5 +23,6 @@ install_resources() {
 }
 
 install_resources "$app" Resources/Info.plist
+cp Resources/RenderMermaid.js Resources/ThirdParty/* "$app/Contents/Resources/"
 codesign --force --sign - "$app"
 printf '%s\n' "$app"

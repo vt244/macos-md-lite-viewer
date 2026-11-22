@@ -59,11 +59,18 @@ enum MarkdownTests {
         - [x]word
 
         [x] Outside a list
+
+        ```mermaid
+        flowchart LR
+          A["<em>Source</em>"] --> B[Preview]
+        ```
         """#)
         try check(extensions.components(separatedBy: "type=\"checkbox\"").count == 4, extensions)
         try check(extensions.contains("disabled checked> Finished"), extensions)
         try check(extensions.contains("disabled> Pending"), extensions)
         try check(extensions.contains("<p>[x] Escaped text</p>"), extensions)
+        try check(extensions.contains("<pre data-mermaid><span class=\"code-language\">mermaid</span>"), extensions)
+        try check(extensions.contains("A[&quot;&lt;em&gt;Source&lt;/em&gt;&quot;] --&gt; B"), extensions)
 
         let empty = try MarkdownRenderer.body(for: "")
         try check(empty.isEmpty, "Empty Markdown should return an empty body")

@@ -4,6 +4,8 @@ import WebKit
 struct PreviewPage {
     let bundle: Bundle
 
+    private static let mermaidWorld = WKContentWorld.world(name: "Markdown Viewer Mermaid")
+
     func configuration() -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
@@ -13,7 +15,23 @@ struct PreviewPage {
 
     @discardableResult
     func load(_ body: String, in webView: WKWebView, notice: Bool = false) -> WKNavigation? {
+        let scripts = webView.configuration.userContentController
+        scripts.removeAllUserScripts()
+        if !notice, Self.hasDiagrams(in: body),
+           let library = resource("mermaid.min", extension: "js"),
+           let renderer = resource("RenderMermaid", extension: "js") {
+            scripts.addUserScript(WKUserScript(
+                source: library + "\n" + renderer,
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true,
+                in: Self.mermaidWorld
+            ))
+        }
         return webView.loadHTMLString(html(body, notice: notice), baseURL: nil)
+    }
+
+    private static func hasDiagrams(in body: String) -> Bool {
+        body.contains("<pre data-mermaid>")
     }
 
     func html(_ body: String, notice: Bool = false) -> String {
