@@ -51,9 +51,9 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
         preview.onDrop = openFiles
         preview.registerForDraggedTypes([.fileURL])
         showHTML("""
-        <h1>\(MarkdownRenderer.escape("Откройте файл Markdown"))</h1>
-        <p>\(MarkdownRenderer.escape("Перетащите файл в окно или нажмите ⌘O."))</p>
-        <a href="markdown-viewer://open">\(MarkdownRenderer.escape("Открыть файл"))</a>
+        <h1>\(MarkdownRenderer.escape(L10n.text("welcome.title")))</h1>
+        <p>\(MarkdownRenderer.escape(L10n.text("welcome.instructions")))</p>
+        <a href="markdown-viewer://open">\(MarkdownRenderer.escape(L10n.text("open.button")))</a>
         """, notice: true)
     }
 
@@ -85,7 +85,7 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
         let request = UUID()
         loadID = request
         isRendering = true
-        showHTML("<p>\(MarkdownRenderer.escape("Открытие документа…"))</p>", notice: true)
+        showHTML("<p>\(MarkdownRenderer.escape(L10n.text("status.loading")))</p>", notice: true)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let result = Result { try MarkdownDocument.render(documentURL) }
             DispatchQueue.main.async { [weak self] in
@@ -96,7 +96,7 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
                     self.pageNavigation = Self.page.loadDocument(body, in: self.preview)
                 case .failure(let error):
                     let message = MarkdownRenderer.escape(error.localizedDescription)
-                    self.showHTML("<h1>\(MarkdownRenderer.escape("Не удалось открыть файл"))</h1><p>\(message)</p>", notice: true)
+                    self.showHTML("<h1>\(MarkdownRenderer.escape(L10n.text("status.openFailed")))</h1><p>\(message)</p>", notice: true)
                 }
             }
         }
@@ -123,18 +123,18 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
                  willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         if identifier == Self.searchItem {
             let item = NSSearchToolbarItem(itemIdentifier: identifier)
-            item.label = "Поиск"
-            search.placeholderString = "Поиск по документу"
+            item.label = L10n.text("toolbar.search")
+            search.placeholderString = L10n.text("toolbar.searchPlaceholder")
             search.delegate = self
-            search.setAccessibilityLabel("Поиск по документу")
+            search.setAccessibilityLabel(L10n.text("toolbar.searchPlaceholder"))
             item.searchField = search
             return item
         }
 
         let item = NSToolbarItem(itemIdentifier: identifier)
         let isOpen = identifier == Self.openItem
-        item.label = isOpen ? "Открыть" : "Обновить"
-        item.toolTip = isOpen ? "Открыть файл (⌘O)" : "Перечитать файл (⌘R)"
+        item.label = isOpen ? L10n.text("toolbar.open") : L10n.text("toolbar.reload")
+        item.toolTip = isOpen ? L10n.text("toolbar.openHelp") : L10n.text("toolbar.reloadHelp")
         item.image = NSImage(systemSymbolName: isOpen ? "folder" : "arrow.clockwise",
                              accessibilityDescription: item.label)
         item.target = self

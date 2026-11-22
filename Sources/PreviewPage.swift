@@ -18,7 +18,7 @@ struct PreviewPage {
 
     func html(_ body: String, notice: Bool = false) -> String {
         let style = resource("Preview", extension: "css") ?? ""
-        let language = notice ? " lang=\"ru\"" : ""
+        let language = notice ? " lang=\"\(L10n.language)\"" : ""
         let pageClass = notice ? "notice" : "document"
         return """
         <!doctype html>
@@ -33,7 +33,7 @@ struct PreviewPage {
     @discardableResult
     func loadDocument(_ body: String, in webView: WKWebView) -> WKNavigation? {
         if body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return load("<h1>\(MarkdownRenderer.escape("Документ пуст"))</h1>", in: webView, notice: true)
+            return load("<h1>\(MarkdownRenderer.escape(L10n.text("status.empty")))</h1>", in: webView, notice: true)
         }
         return load(body, in: webView)
     }

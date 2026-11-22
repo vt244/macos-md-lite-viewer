@@ -41,9 +41,9 @@ enum MarkdownDocument {
 
         var errorDescription: String? {
             switch self {
-            case .notRegularFile: return "Выберите обычный файл Markdown."
-            case .tooLarge: return "Размер документа превышает 16 МБ."
-            case .unsupportedEncoding: return "Сохраните файл в UTF-8 или UTF-16 с меткой порядка байтов."
+            case .notRegularFile: return L10n.text("error.notRegularFile")
+            case .tooLarge: return L10n.text("error.tooLarge")
+            case .unsupportedEncoding: return L10n.text("error.unsupportedEncoding")
             }
         }
     }
