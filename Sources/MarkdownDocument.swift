@@ -13,7 +13,7 @@ enum MarkdownDocument {
         return (components?.url ?? url).standardizedFileURL
     }
 
-    static func render(_ url: URL) throws -> String {
+    static func render(_ url: URL, drawDiagram: ((String, Int) -> String?)? = nil) throws -> String {
         let url = url.resolvingSymlinksInPath()
         let values = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
         guard values.isRegularFile == true else { throw ReadError.notRegularFile }
@@ -33,7 +33,7 @@ enum MarkdownDocument {
             source = String(data: data, encoding: .utf8)
         }
         guard let source else { throw ReadError.unsupportedEncoding }
-        return try MarkdownRenderer.body(for: source, document: url)
+        return try MarkdownRenderer.body(for: source, document: url, drawDiagram: drawDiagram)
     }
 
     private enum ReadError: LocalizedError {
