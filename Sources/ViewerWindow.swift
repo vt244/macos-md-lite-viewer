@@ -44,6 +44,7 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
         window.center()
 
         let toolbar = NSToolbar(identifier: "ViewerToolbar")
+        toolbar.displayMode = .iconOnly
         toolbar.delegate = self
         window.toolbar = toolbar
 
