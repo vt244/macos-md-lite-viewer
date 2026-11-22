@@ -1,6 +1,6 @@
 # Markdown Viewer
 
-Нативный просмотрщик локальных Markdown-файлов для macOS 13 и новее. Использует AppKit, WebKit и системный парсер Markdown в Foundation. Устанавливать пакеты для сборки или запуска не требуется.
+Нативный просмотрщик локальных Markdown-файлов для macOS 13 и новее. Использует AppKit, WebKit и системный парсер Markdown в Foundation. Mermaid входит в сборку. Устанавливать пакеты для сборки или запуска не требуется.
 
 ## Сборка и запуск
 
@@ -26,7 +26,14 @@ open -a "$PWD/.build/Markdown Viewer.app" README.md
 
 Интерфейс следует языку приложения в macOS. Доступны английский и русский. Для остальных языков используется английский.
 
-### Списки задач
+### Диаграммы и списки задач
+
+Для Mermaid используйте блок кода с меткой `mermaid`. В приложении локально отображаются блок-схемы, диаграммы последовательности, классов и другие типы Mermaid. Если диаграмму нельзя построить, показывается её исходный текст.
+
+```mermaid
+flowchart LR
+    A[Markdown] --> B[Markdown Viewer]
+```
 
 Маркеры `- [ ]` и `- [x]` в списках отображаются как флажки только для чтения.
 
@@ -44,14 +51,14 @@ open -a "$PWD/.build/Markdown Viewer.app" README.md
 
 ## Разработка
 
-Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра собирается в `Sources/PreviewPage.swift`. Оформление и локализации находятся в `Resources/`.
+Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра собирается в `Sources/PreviewPage.swift`. Оформление, локализации и библиотека Mermaid находятся в `Resources/`.
 
 ```bash
 ./Scripts/test.sh
 ```
 
-Тесты из `Tests/` проверяют чтение файлов, структуру Markdown и безопасное отображение ссылок и HTML. Для ручной проверки откройте этот README в приложении.
+Тесты из `Tests/` проверяют чтение файлов, структуру Markdown и безопасное отображение ссылок и HTML. Для ручной проверки откройте этот README в приложении. Проверьте диаграмму Mermaid в приложении.
 
 ## Лицензия
 
-[MIT](LICENSE).
+[MIT](LICENSE). Лицензии Mermaid и её зависимостей перечислены в [Mermaid-LICENSES.txt](Resources/ThirdParty/Mermaid-LICENSES.txt).
