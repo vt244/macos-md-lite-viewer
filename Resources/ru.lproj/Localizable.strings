@@ -28,4 +28,4 @@
 "menu.findPrevious" = "Найти ранее";
 "error.notRegularFile" = "Выберите обычный файл Markdown.";
 "error.tooLarge" = "Размер документа превышает 16 МБ.";
-"error.unsupportedEncoding" = "Сохраните файл в UTF-8 или UTF-16 с меткой порядка байтов.";
+"error.unsupportedEncoding" = "Сохраните файл в ASCII, UTF-8 или UTF-16 с меткой порядка байтов.";

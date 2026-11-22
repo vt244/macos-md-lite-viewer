@@ -28,4 +28,4 @@
 "menu.findPrevious" = "Find Previous";
 "error.notRegularFile" = "Choose a regular Markdown file.";
 "error.tooLarge" = "The document exceeds 16 MB.";
-"error.unsupportedEncoding" = "Save the file as UTF-8, or UTF-16 with a byte order mark.";
+"error.unsupportedEncoding" = "Save the file as ASCII, UTF-8, or UTF-16 with a byte order mark.";

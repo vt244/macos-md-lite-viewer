@@ -51,6 +51,20 @@ enum MarkdownTests {
             try check(html.contains(expected), "Missing HTML: \(expected)\n\(html)")
         }
         try check(!html.contains("href=\"javascript:") && !html.contains("<script>"), "Unsafe HTML was emitted")
+        let extensions = try MarkdownRenderer.body(for: #"""
+        - [x] Finished
+        - [ ] Pending
+          - [X] Nested
+        - \[x\] Escaped text
+        - [x]word
+
+        [x] Outside a list
+        """#)
+        try check(extensions.components(separatedBy: "type=\"checkbox\"").count == 4, extensions)
+        try check(extensions.contains("disabled checked> Finished"), extensions)
+        try check(extensions.contains("disabled> Pending"), extensions)
+        try check(extensions.contains("<p>[x] Escaped text</p>"), extensions)
+
         let empty = try MarkdownRenderer.body(for: "")
         try check(empty.isEmpty, "Empty Markdown should return an empty body")
 
@@ -70,6 +84,17 @@ enum MarkdownTests {
         try Data([0xEF, 0xBB, 0xBF] + Array("# UTF-8".utf8)).write(to: file)
         let bomPage = try MarkdownDocument.render(file)
         try check(bomPage == "<h1 id=\"utf-8\">UTF-8</h1>", "UTF-8 BOM should be stripped")
+        let diagram = "+------+     +------+\n| File | --> | View |\n+------+     +------+"
+        try Data(("# ASCII\r\n\r\n```ascii\r\n"
+            + diagram.replacingOccurrences(of: "\n", with: "\r\n")
+            + "\r\n```\r\n").utf8).write(to: file)
+        let asciiPage = try MarkdownDocument.render(file)
+        try check(asciiPage.contains("<span class=\"code-language\">ascii</span>"),
+                  "The ASCII language label should render")
+        let escapedDiagram = diagram.replacingOccurrences(of: ">", with: "&gt;")
+        try check(asciiPage.contains("<code>\(escapedDiagram)\n</code>"),
+                  "The ASCII diagram should preserve its spaces and line breaks")
+
         print("Markdown rendering and file checks passed.")
     }
 
