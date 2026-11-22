@@ -4,7 +4,12 @@ enum MarkdownRenderer {
     static func body(
         for source: String, document: URL? = nil
     ) throws -> String {
-        let markdown = try AttributedString(markdown: source)
+        let hasTaskMarkers = source.contains("[ ]") || source.contains("[x]") || source.contains("[X]")
+        let options = AttributedString.MarkdownParsingOptions(appliesSourcePositionAttributes: hasTaskMarkers)
+        let markdown = try AttributedString(markdown: source, options: options)
+        let sourceLines = hasTaskMarkers
+            ? source.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+            : []
         var headings = [Int: String]()
         for run in markdown.runs {
             if let block = run.presentationIntent?.components.first, case .header = block.kind {
@@ -92,7 +97,13 @@ enum MarkdownRenderer {
                 stack.append(block)
             }
 
-            let value = String(markdown[run.range].characters)
+            var value = String(markdown[run.range].characters)
+            if path.count >= 2, shared < path.count - 1,
+               path.last?.kind == .paragraph, case .listItem = path[path.count - 2].kind,
+               let checked = taskState(value, position: run.markdownSourcePosition, lines: sourceLines) {
+                html += "<input class=\"task-checkbox\" type=\"checkbox\" disabled\(checked ? " checked" : "")> "
+                value = String(value.dropFirst(4))
+            }
             switch path.last?.kind {
             case .thematicBreak: break
             case .codeBlock: codeSource += value
@@ -106,6 +117,20 @@ enum MarkdownRenderer {
         }
         closeBlocks(after: 0)
         return html
+    }
+
+    private static func taskState(
+        _ value: String, position: AttributedString.MarkdownSourcePosition?, lines: [Substring]
+    ) -> Bool? {
+        let marker = value.prefix(3).lowercased()
+        guard marker == "[ ]" || marker == "[x]",
+              value.dropFirst(3).first?.isWhitespace == true,
+              let position, position.startLine > 0, position.startLine <= lines.count,
+              position.startColumn > 0
+        else { return nil }
+        let original = lines[position.startLine - 1].dropFirst(position.startColumn - 1)
+        guard original.prefix(3).lowercased() == marker else { return nil }
+        return marker == "[x]"
     }
 
     static func escape(_ text: String) -> String {

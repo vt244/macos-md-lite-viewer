@@ -52,6 +52,12 @@ p, ul, ol, blockquote, pre, .table-wrap { margin: 0 0 1.15em; }
 ul, ol { padding-inline-start: 1.7em; }
 li > p, li > ul, li > ol { margin-bottom: .25em; }
 li::marker { color: var(--subtle); }
+li:has(> p > .task-checkbox) { list-style: none; }
+.task-checkbox {
+    margin: 0 .28em 0 -1.3em;
+    vertical-align: baseline;
+    accent-color: var(--accent);
+}
 
 a { color: var(--accent); text-underline-offset: .19em; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
@@ -76,7 +82,14 @@ pre {
     border-radius: 9px;
     background: var(--panel);
 }
-pre code { padding: 0; background: none; }
+pre code {
+    padding: 0;
+    background: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    font-variant-ligatures: none;
+    tab-size: 4;
+}
 .code-language {
     display: block;
     margin-bottom: 5px;
