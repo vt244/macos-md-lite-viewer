@@ -126,3 +126,19 @@ img { max-width: 100%; height: auto; vertical-align: middle; }
     font-weight: 600;
     text-decoration: none;
 }
+
+.diagram {
+    margin: 0 0 1.15em;
+    padding: 12px;
+    overflow: auto;
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+    background: var(--panel);
+    text-align: center;
+}
+.diagram > svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+}
