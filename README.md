@@ -17,6 +17,10 @@ open ".build/Markdown Viewer.app"
 open -a "$PWD/.build/Markdown Viewer.app" README.md
 ```
 
+## Быстрый просмотр в Finder
+
+Откройте собранное приложение один раз, чтобы macOS зарегистрировала расширение. Затем выделите в Finder файл Markdown и нажмите пробел. Если macOS использует другой обработчик, проверьте, что расширение Markdown Viewer включено в разделе расширений быстрого просмотра в системных настройках.
+
 ## Использование
 
 - Открывайте `.md`, `.markdown` и `.mdown` через **Файл → Открыть** (⌘O), перетаскивайте их в окно или используйте «Открыть с помощью» в Finder.
@@ -51,13 +55,13 @@ flowchart LR
 
 ## Разработка
 
-Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра собирается в `Sources/PreviewPage.swift`. Оформление, локализации и библиотека Mermaid находятся в `Resources/`.
+Точка входа находится в `Sources/main.swift`. Окно и команды просмотра реализованы в `Sources/ViewerWindow.swift`, разбор вывода Foundation и чтение файлов — в `Sources/MarkdownRenderer.swift` и `Sources/MarkdownDocument.swift`. Страница просмотра общая для окна и Quick Look и собирается в `Sources/PreviewPage.swift`. Расширение Finder находится в `Extensions/QuickLook/`, а оформление, локализации и библиотека Mermaid — в `Resources/`.
 
 ```bash
 ./Scripts/test.sh
 ```
 
-Тесты из `Tests/` проверяют чтение файлов, структуру Markdown и безопасное отображение ссылок и HTML. Для ручной проверки откройте этот README в приложении. Проверьте диаграмму Mermaid в приложении.
+Тесты из `Tests/` проверяют чтение файлов, структуру Markdown и безопасное отображение ссылок и HTML. Для ручной проверки откройте этот README в приложении и через пробел в Finder. Проверьте диаграмму Mermaid в приложении.
 
 ## Лицензия
 
