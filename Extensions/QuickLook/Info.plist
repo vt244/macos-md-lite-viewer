@@ -18,7 +18,7 @@
         <key>NSExtensionAttributes</key>
         <dict>
             <key>QLSupportedContentTypes</key>
-            <array><string>net.daringfireball.markdown</string></array>
+            <array><string>net.daringfireball.markdown</string><string>org.asciidoctor.asciidoc</string></array>
             <key>QLIsDataBasedPreview</key><true/>
         </dict>
     </dict>

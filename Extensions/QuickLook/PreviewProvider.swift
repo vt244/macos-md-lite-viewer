@@ -10,9 +10,10 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
             let hasScope = file.startAccessingSecurityScopedResource()
             defer { if hasScope { file.stopAccessingSecurityScopedResource() } }
 
-            let result = Result { try MarkdownDocument.render(file, drawDiagram: QuickLookDiagram.render) }
+            let bundle = Bundle(for: PreviewProvider.self)
+            let result = Result { try MarkdownDocument.render(file, bundle: bundle, drawDiagram: QuickLookDiagram.render) }
             DispatchQueue.main.async {
-                let page = PreviewPage(bundle: Bundle(for: PreviewProvider.self))
+                let page = PreviewPage(bundle: bundle)
                 let data: Data
                 switch result {
                 case .success(let body) where body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:

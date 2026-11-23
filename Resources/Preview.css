@@ -106,6 +106,45 @@ th { background: var(--panel); }
 .right { text-align: right; }
 img { max-width: 100%; height: auto; vertical-align: middle; }
 
+.asciidoc .toc,
+.asciidoc .sidebarblock,
+.asciidoc .exampleblock,
+.asciidoc details {
+    margin: 0 0 1.15em;
+    padding: .8em 1em;
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+}
+.asciidoc .toc, .asciidoc .sidebarblock { background: var(--panel); }
+.asciidoc .toc ul { list-style: none; margin: .25em 0 0; }
+.asciidoc .toc > ul { padding-inline-start: 0; }
+.asciidoc .title, .asciidoc #toctitle { font-weight: 600; }
+.asciidoc .listingblock > .title, .asciidoc .imageblock > .title,
+.asciidoc caption, .asciidoc .attribution, .asciidoc #footnotes {
+    color: var(--subtle);
+    font-size: .88em;
+}
+.asciidoc .admonitionblock { margin: 0 0 1.15em; }
+.asciidoc .admonitionblock table { width: 100%; border-inline-start: 3px solid var(--accent); }
+.asciidoc .admonitionblock td { border: 0; }
+.asciidoc .admonitionblock .icon { width: 1%; color: var(--accent); font-weight: 600; }
+.asciidoc :is(.toc, .sidebarblock, .exampleblock, .admonitionblock) p:last-child { margin-bottom: 0; }
+.asciidoc table.tableblock { width: 100%; table-layout: fixed; }
+.asciidoc table.fit-content { width: auto; min-width: 0; table-layout: auto; }
+.asciidoc td > p:last-child, .asciidoc th > p:last-child { margin-bottom: 0; }
+.asciidoc caption { text-align: start; }
+.asciidoc .halign-left { text-align: left; }
+.asciidoc .halign-center, .asciidoc .imageblock.text-center { text-align: center; }
+.asciidoc .halign-right, .asciidoc .imageblock.text-right { text-align: right; }
+.asciidoc .valign-top { vertical-align: top; }
+.asciidoc .valign-middle { vertical-align: middle; }
+.asciidoc .valign-bottom { vertical-align: bottom; }
+.asciidoc .imageblock, .asciidoc dl { margin: 0 0 1.15em; }
+.asciidoc dt { font-weight: 600; }
+.asciidoc dd { margin-inline-start: 1.4em; }
+.asciidoc .checklist { list-style: none; }
+.asciidoc summary { cursor: pointer; }
+
 .notice {
     min-height: 100vh;
     display: grid;
