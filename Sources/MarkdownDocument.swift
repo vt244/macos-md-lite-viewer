@@ -1,7 +1,9 @@
 import Foundation
 
 enum MarkdownDocument {
-    static let extensions = ["md", "markdown", "mdown"]
+    static let asciiDocExtensions = ["asciidoc", "asc", "ad", "adoc"]
+    static let extensions = ["md", "markdown", "mdown"] + asciiDocExtensions
+    static let fileSizeLimit = 16 * 1024 * 1024
 
     static func supports(_ url: URL) -> Bool {
         url.isFileURL && url.host?.isEmpty != false && extensions.contains(url.pathExtension.lowercased())
@@ -13,11 +15,20 @@ enum MarkdownDocument {
         return (components?.url ?? url).standardizedFileURL
     }
 
-    static func render(_ url: URL, drawDiagram: ((String, Int) -> String?)? = nil) throws -> String {
+    static func render(_ url: URL, bundle: Bundle = .main,
+                       drawDiagram: ((String, Int) -> String?)? = nil) throws -> String {
+        let isAsciiDoc = asciiDocExtensions.contains(url.pathExtension.lowercased())
         let url = url.resolvingSymlinksInPath()
+        let (source, _) = try readText(at: url, limit: fileSizeLimit)
+        if isAsciiDoc {
+            return try AsciiDocRenderer.body(for: source, document: url, bundle: bundle)
+        }
+        return try MarkdownRenderer.body(for: source, document: url, drawDiagram: drawDiagram)
+    }
+
+    static func readText(at url: URL, limit: Int) throws -> (text: String, size: Int) {
         let values = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
         guard values.isRegularFile == true else { throw ReadError.notRegularFile }
-        let limit = 16 * 1024 * 1024
         guard let size = values.fileSize, size <= limit else { throw ReadError.tooLarge }
         let file = try FileHandle(forReadingFrom: url)
         defer { try? file.close() }
@@ -33,7 +44,17 @@ enum MarkdownDocument {
             source = String(data: data, encoding: .utf8)
         }
         guard let source else { throw ReadError.unsupportedEncoding }
-        return try MarkdownRenderer.body(for: source, document: url, drawDiagram: drawDiagram)
+        return (source, data.count)
+    }
+
+    static func localResource(_ reference: URL, in document: URL?) -> URL? {
+        guard let folder = document?.deletingLastPathComponent().resolvingSymlinksInPath(),
+              let resolved = URL(string: reference.relativeString, relativeTo: document)?.absoluteURL,
+              resolved.isFileURL, resolved.host?.isEmpty != false
+        else { return nil }
+        let file = resolved.resolvingSymlinksInPath().standardizedFileURL
+        guard file.pathComponents.starts(with: folder.pathComponents) else { return nil }
+        return file
     }
 
     private enum ReadError: LocalizedError {

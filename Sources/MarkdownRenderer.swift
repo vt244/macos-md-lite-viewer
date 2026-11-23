@@ -214,7 +214,7 @@ enum MarkdownRenderer {
         return result
     }
 
-    private static func linkTarget(_ url: URL, document: URL?) -> String? {
+    static func linkTarget(_ url: URL, document: URL?) -> String? {
         if url.relativeString.hasPrefix("#") { return url.relativeString }
         if let scheme = url.scheme?.lowercased(), ["http", "https", "mailto"].contains(scheme) {
             return url.absoluteString
@@ -230,15 +230,12 @@ enum MarkdownRenderer {
         return target.string
     }
 
-    private static func localImage(_ image: URL, document: URL?, budget: inout Int) -> String? {
-        guard let folder = document?.deletingLastPathComponent().resolvingSymlinksInPath(),
-              let resolved = URL(string: image.relativeString, relativeTo: document)?.absoluteURL,
-              resolved.isFileURL, resolved.host?.isEmpty != false
-        else { return nil }
-        let file = resolved.resolvingSymlinksInPath().standardizedFileURL
+    static func localImage(_ image: URL, document: URL?, budget: inout Int, allowsSVG: Bool = false) -> String? {
         let formats = ["png": "png", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif", "webp": "webp"]
-        guard file.pathComponents.starts(with: folder.pathComponents),
-              let format = formats[file.pathExtension.lowercased()],
+        guard let file = MarkdownDocument.localResource(image, in: document) else { return nil }
+        let ext = file.pathExtension.lowercased()
+        // SVG is embedded as an image resource, with no access to the document DOM.
+        guard let format = allowsSVG && ext == "svg" ? "svg+xml" : formats[ext],
               let info = try? file.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
               info.isRegularFile == true, let size = info.fileSize, size <= budget,
               let data = try? Data(contentsOf: file), data.count <= budget

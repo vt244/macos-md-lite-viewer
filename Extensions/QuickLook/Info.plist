@@ -8,8 +8,8 @@
     <key>CFBundleName</key><string>Markdown Viewer</string>
     <key>CFBundleDisplayName</key><string>Markdown Viewer</string>
     <key>CFBundlePackageType</key><string>XPC!</string>
-    <key>CFBundleShortVersionString</key><string>0.1.0</string>
-    <key>CFBundleVersion</key><string>7</string>
+    <key>CFBundleShortVersionString</key><string>0.2.0</string>
+    <key>CFBundleVersion</key><string>10</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>NSExtension</key>
     <dict>
@@ -18,7 +18,7 @@
         <key>NSExtensionAttributes</key>
         <dict>
             <key>QLSupportedContentTypes</key>
-            <array><string>net.daringfireball.markdown</string></array>
+            <array><string>net.daringfireball.markdown</string><string>org.asciidoctor.asciidoc</string></array>
             <key>QLIsDataBasedPreview</key><true/>
         </dict>
     </dict>

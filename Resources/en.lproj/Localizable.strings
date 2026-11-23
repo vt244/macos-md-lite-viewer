@@ -1,4 +1,4 @@
-"welcome.title" = "Open a Markdown file";
+"welcome.title" = "Open a document";
 "welcome.instructions" = "Drag a file into the window or press ⌘O.";
 "open.button" = "Open File";
 "status.loading" = "Opening document…";
@@ -10,8 +10,8 @@
 "toolbar.reload" = "Reload";
 "toolbar.openHelp" = "Open a file (⌘O)";
 "toolbar.reloadHelp" = "Reload the file (⌘R)";
-"panel.title" = "Open Markdown";
-"panel.message" = "Choose one or more Markdown files.";
+"panel.title" = "Open Document";
+"panel.message" = "Choose one or more Markdown or AsciiDoc files.";
 "menu.about" = "About Markdown Viewer";
 "menu.quit" = "Quit Markdown Viewer";
 "menu.file" = "File";
@@ -26,6 +26,8 @@
 "menu.find" = "Find…";
 "menu.findNext" = "Find Next";
 "menu.findPrevious" = "Find Previous";
-"error.notRegularFile" = "Choose a regular Markdown file.";
+"error.notRegularFile" = "Choose a regular file.";
 "error.tooLarge" = "The document exceeds 16 MB.";
 "error.unsupportedEncoding" = "Save the file as ASCII, UTF-8, or UTF-16 with a byte order mark.";
+"error.asciiDocEngine" = "The AsciiDoc renderer could not start.";
+"error.asciiDocConversion" = "The AsciiDoc renderer could not format the document.";

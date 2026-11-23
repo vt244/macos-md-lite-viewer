@@ -1,4 +1,4 @@
-"welcome.title" = "Откройте файл Markdown";
+"welcome.title" = "Откройте документ";
 "welcome.instructions" = "Перетащите файл в окно или нажмите ⌘O.";
 "open.button" = "Открыть файл";
 "status.loading" = "Открытие документа…";
@@ -10,8 +10,8 @@
 "toolbar.reload" = "Обновить";
 "toolbar.openHelp" = "Открыть файл (⌘O)";
 "toolbar.reloadHelp" = "Перечитать файл (⌘R)";
-"panel.title" = "Открыть Markdown";
-"panel.message" = "Выберите один или несколько файлов Markdown.";
+"panel.title" = "Открыть документ";
+"panel.message" = "Выберите один или несколько файлов Markdown или AsciiDoc.";
 "menu.about" = "О Markdown Viewer";
 "menu.quit" = "Завершить Markdown Viewer";
 "menu.file" = "Файл";
@@ -26,6 +26,8 @@
 "menu.find" = "Найти…";
 "menu.findNext" = "Найти далее";
 "menu.findPrevious" = "Найти ранее";
-"error.notRegularFile" = "Выберите обычный файл Markdown.";
+"error.notRegularFile" = "Выберите обычный файл.";
 "error.tooLarge" = "Размер документа превышает 16 МБ.";
 "error.unsupportedEncoding" = "Сохраните файл в ASCII, UTF-8 или UTF-16 с меткой порядка байтов.";
+"error.asciiDocEngine" = "Не удалось запустить обработчик AsciiDoc.";
+"error.asciiDocConversion" = "Не удалось отобразить разметку AsciiDoc.";
