@@ -22,6 +22,13 @@
             <key>LSItemContentTypes</key>
             <array><string>net.daringfireball.markdown</string></array>
         </dict>
+        <dict>
+            <key>CFBundleTypeName</key><string>AsciiDoc</string>
+            <key>CFBundleTypeRole</key><string>Viewer</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>org.asciidoctor.asciidoc</string></array>
+        </dict>
     </array>
     <key>UTImportedTypeDeclarations</key>
     <array>
@@ -34,6 +41,17 @@
                 <key>public.filename-extension</key>
                 <array><string>md</string><string>markdown</string><string>mdown</string></array>
                 <key>public.mime-type</key><string>text/markdown</string>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key><string>org.asciidoctor.asciidoc</string>
+            <key>UTTypeDescription</key><string>AsciiDoc</string>
+            <key>UTTypeConformsTo</key><array><string>public.plain-text</string></array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array><string>asciidoc</string><string>asc</string><string>ad</string><string>adoc</string></array>
+                <key>public.mime-type</key><string>text/asciidoc</string>
             </dict>
         </dict>
     </array>
