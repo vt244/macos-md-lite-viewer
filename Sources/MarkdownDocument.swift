@@ -2,7 +2,8 @@ import Foundation
 
 enum MarkdownDocument {
     static let asciiDocExtensions = ["asciidoc", "asc", "ad", "adoc"]
-    static let extensions = ["md", "markdown", "mdown"] + asciiDocExtensions
+    static let htmlExtensions = ["html", "htm"]
+    static let extensions = ["md", "markdown", "mdown"] + asciiDocExtensions + htmlExtensions
     static let fileSizeLimit = 16 * 1024 * 1024
 
     static func supports(_ url: URL) -> Bool {
@@ -16,13 +17,16 @@ enum MarkdownDocument {
     }
 
     static func render(_ url: URL, bundle: Bundle = .main) throws -> String {
-        let isAsciiDoc = asciiDocExtensions.contains(url.pathExtension.lowercased())
+        let fileExtension = url.pathExtension.lowercased()
         let url = url.resolvingSymlinksInPath()
         let (source, _) = try readText(at: url, limit: fileSizeLimit)
-        if isAsciiDoc {
+        if asciiDocExtensions.contains(fileExtension) {
             return try AsciiDocRenderer.body(for: source, document: url, bundle: bundle)
         }
-        return try MarkdownRenderer.body(for: source, document: url)
+        if htmlExtensions.contains(fileExtension) {
+            return try HTMLRenderer.body(for: source, document: url, bundle: bundle)
+        }
+        return try MarkdownRenderer.body(for: source, document: url, bundle: bundle)
     }
 
     static func readText(at url: URL, limit: Int) throws -> (text: String, size: Int) {

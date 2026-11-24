@@ -9,7 +9,7 @@ mkdir -p "$app/Contents/MacOS" "$extension/Contents/MacOS" "$build/module-cache"
 export TMPDIR="$build/tmp"
 
 swift_flags=(-O -target "$(uname -m)-apple-macosx13.0" -module-cache-path "$build/module-cache")
-shared_sources=(Sources/L10n.swift Sources/MarkdownDocument.swift Sources/MarkdownRenderer.swift Sources/AsciiDocRenderer.swift Sources/PreviewPage.swift)
+shared_sources=(Sources/L10n.swift Sources/MarkdownDocument.swift Sources/MarkdownRenderer.swift Sources/HTMLRenderer.swift Sources/AsciiDocRenderer.swift Sources/PreviewPage.swift)
 
 swiftc "${swift_flags[@]}" "${shared_sources[@]}" Sources/ViewerWindow.swift Sources/main.swift \
     -o "$app/Contents/MacOS/MarkdownViewer"
@@ -22,7 +22,7 @@ install_resources() {
     mkdir -p "$resources/en.lproj" "$resources/ru.lproj"
     cp "$info" "$bundle/Contents/Info.plist"
     cp Resources/Preview.css "$resources/"
-    cp Resources/RenderAsciiDoc.js Resources/ThirdParty/asciidoc-engine.min.js \
+    cp Resources/SanitizeHTML.js Resources/RenderAsciiDoc.js Resources/ThirdParty/asciidoc-engine.min.js \
         Resources/ThirdParty/AsciiDoc-LICENSES.txt "$resources/"
     cp Resources/RenderMermaid.js Resources/ThirdParty/mermaid.min.js \
         Resources/ThirdParty/Mermaid-LICENSES.txt "$resources/"

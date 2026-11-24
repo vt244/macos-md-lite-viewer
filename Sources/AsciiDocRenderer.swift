@@ -7,9 +7,8 @@ enum AsciiDocRenderer {
 
     static func body(for source: String, document: URL, bundle: Bundle) throws -> String {
         guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "" }
-        guard let engine = bundle.url(forResource: "asciidoc-engine.min", withExtension: "js"),
-              let bridge = bundle.url(forResource: "RenderAsciiDoc", withExtension: "js"),
-              let context = JSContext()
+        guard let bridge = bundle.url(forResource: "RenderAsciiDoc", withExtension: "js"),
+              let context = try? HTMLRenderer.makeContext(bundle: bundle)
         else { throw RenderError.engineUnavailable }
 
         var output: Result<String, RenderError>?
@@ -24,11 +23,7 @@ enum AsciiDocRenderer {
             includeBudget -= max(1, included.size)
             return included.text
         }
-        var imageBudget = MarkdownDocument.fileSizeLimit
-        let image: @convention(block) (String) -> String? = { target in
-            guard let reference = URL(string: target) else { return nil }
-            return MarkdownRenderer.localImage(reference, document: document, budget: &imageBudget, allowsSVG: true)
-        }
+        let image = HTMLRenderer.imageResolver(document: document, allowsSVG: true)
         let link: @convention(block) (String) -> String? = { target in
             linkTarget(target, document: document)
         }
@@ -36,10 +31,8 @@ enum AsciiDocRenderer {
         context.exceptionHandler = { _, error in
             output = .failure(.conversion(error?.toString() ?? ""))
         }
-        for script in [engine, bridge] {
-            context.evaluateScript(try String(contentsOf: script, encoding: .utf8), withSourceURL: script)
-            if let output { return try output.get() }
-        }
+        context.evaluateScript(try String(contentsOf: bridge, encoding: .utf8), withSourceURL: bridge)
+        if let output { return try output.get() }
         context.objectForKeyedSubscript("renderAsciiDoc")?.call(withArguments: [
             source, includeRoot, crossReferenceSuffix, include, image, link, finish, fail
         ])
@@ -64,7 +57,7 @@ enum AsciiDocRenderer {
         guard let reference = URL(string: target) else { return nil }
         guard reference.pathExtension == crossReferenceSuffix,
               reference.scheme == nil, reference.host == nil
-        else { return MarkdownRenderer.linkTarget(reference, document: document) }
+        else { return HTMLRenderer.linkTarget(reference, document: document) }
 
         guard let resolved = URL(string: target, relativeTo: document)?.absoluteURL,
               var link = URLComponents(url: resolved, resolvingAgainstBaseURL: false)
@@ -74,7 +67,7 @@ enum AsciiDocRenderer {
             let candidate = stem.appendingPathExtension(ext)
             if (try? candidate.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
                 link.path = candidate.path
-                return link.url.flatMap { MarkdownRenderer.linkTarget($0, document: document) }
+                return link.url.flatMap { HTMLRenderer.linkTarget($0, document: document) }
             }
         }
         return nil

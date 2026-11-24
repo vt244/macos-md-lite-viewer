@@ -7,10 +7,10 @@ mkdir -p "$build/module-cache" "$build/tmp"
 export TMPDIR="$build/tmp"
 fixtures="$(mktemp -d "$TMPDIR/markdown-tests.XXXXXX")"
 trap 'rm -rf "$fixtures"' EXIT
-cp Resources/RenderAsciiDoc.js Resources/ThirdParty/asciidoc-engine.min.js "$build/"
+cp Resources/SanitizeHTML.js Resources/RenderAsciiDoc.js Resources/ThirdParty/asciidoc-engine.min.js "$build/"
 
 swiftc -target "$(uname -m)-apple-macosx13.0" -module-cache-path "$build/module-cache" \
-    Sources/L10n.swift Sources/MarkdownRenderer.swift Sources/MarkdownDocument.swift Sources/AsciiDocRenderer.swift \
+    Sources/L10n.swift Sources/MarkdownRenderer.swift Sources/MarkdownDocument.swift Sources/HTMLRenderer.swift Sources/AsciiDocRenderer.swift \
     Tests/MarkdownTests.swift \
     -o "$build/MarkdownTests"
 "$build/MarkdownTests" "$fixtures"

@@ -42,15 +42,14 @@ enum MarkdownTests {
             "<blockquote><p>Цитата</p></blockquote>",
             "<ol start=\"3\"><li><p>Первый пункт</p><ul><li><p>Вложенный пункт</p></li></ul>",
             "<th class=\"center\">B</th>", "<td></td><td class=\"right\">3</td>",
-            "<pre><span class=\"code-language\">swift</span><code>print(&quot;&lt;tag&gt;&quot;)",
+            "<pre><span class=\"code-language\">swift</span><code>print(\"&lt;tag&gt;\")",
             "<hr>", "<a href=\"#", "<a href=\"https://example.com\">Внешняя</a>",
-            "markdown-file://document?url=file:///docs/next.md%23section",
-            "&lt;img src=x onerror=alert(1)&gt;",
-            "&lt;script&gt;alert(1)&lt;/script&gt;"
+            "markdown-file://document?url=file:///docs/next.md%23section"
         ] {
             try check(html.contains(expected), "Missing HTML: \(expected)\n\(html)")
         }
-        try check(!html.contains("href=\"javascript:") && !html.contains("<script>"), "Unsafe HTML was emitted")
+        try check(!html.contains("javascript:") && !html.contains("<script>") && !html.contains("onerror") &&
+                  !html.contains("alert(1)"), "Unsafe HTML was emitted")
 
         let anchors = try MarkdownRenderer.body(for: #"""
         [Stages](#stages) [Alias](#alias)
@@ -81,14 +80,15 @@ enum MarkdownTests {
             #"<span id="stages"></span><h2 id="stages-1">Stages</h2>"#,
             #"<span id="alias"></span><span id="other"></span><h2 id="other-1">Other</h2>"#,
             #"<p>Before <span id="inline"></span> after.</p>"#,
-            "&lt;a id=&quot;unsafe&quot; onclick=&quot;alert(1)&quot;&gt;",
-            "&lt;a id=&quot;escaped&quot;&gt;&lt;/a&gt;",
-            "<code>&lt;a id=&quot;example&quot;&gt;&lt;/a&gt;</code>",
-            "<code>&lt;a id=&quot;source&quot;&gt;&lt;/a&gt;\n</code>"
+            #"<a id="unsafe"></a>"#,
+            #"&lt;a id="escaped"&gt;&lt;/a&gt;"#,
+            #"<code>&lt;a id="example"&gt;&lt;/a&gt;</code>"#,
+            "<code>&lt;a id=\"source\"&gt;&lt;/a&gt;\n</code>"
         ] {
             try check(anchors.contains(expected), "Missing anchor rendering: \(expected)\n\(anchors)")
         }
         try check(anchors.components(separatedBy: #"id="stages""#).count == 2, "Duplicate explicit anchor")
+        try check(!anchors.contains("onclick"), "Inline anchor handler survived sanitization")
 
         let extensions = try MarkdownRenderer.body(for: #"""
         - [x] Finished
@@ -105,11 +105,11 @@ enum MarkdownTests {
         ```
         """#)
         try check(extensions.components(separatedBy: "type=\"checkbox\"").count == 4, extensions)
-        try check(extensions.contains("disabled checked> Finished"), extensions)
-        try check(extensions.contains("disabled> Pending"), extensions)
+        try check(extensions.contains(#"disabled="" checked=""> Finished"#), extensions)
+        try check(extensions.contains(#"disabled=""> Pending"#), extensions)
         try check(extensions.contains("<p>[x] Escaped text</p>"), extensions)
-        try check(extensions.contains("<pre data-mermaid><span class=\"code-language\">mermaid</span>"), extensions)
-        try check(extensions.contains("A[&quot;&lt;em&gt;Source&lt;/em&gt;&quot;] --&gt; B"), extensions)
+        try check(extensions.contains(#"<pre data-mermaid=""><span class="code-language">mermaid</span>"#), extensions)
+        try check(extensions.contains(#"A["&lt;em&gt;Source&lt;/em&gt;"] --&gt; B"#), extensions)
 
         let diagrams = try MarkdownRenderer.body(for: """
         ```mermaid
@@ -128,8 +128,8 @@ enum MarkdownTests {
           end
         ```
         """)
-        try check(diagrams.components(separatedBy: "<pre data-mermaid>").count == 3, diagrams)
-        try check(diagrams.contains("subgraph Group\n    A[&quot;&lt;Start&gt;&quot;] &lt;--&gt; B[End]"), diagrams)
+        try check(diagrams.components(separatedBy: #"<pre data-mermaid="">"#).count == 3, diagrams)
+        try check(diagrams.contains("subgraph Group\n    A[\"&lt;Start&gt;\"] &lt;--&gt; B[End]"), diagrams)
         try check(diagrams.contains("opt Show preview\n    A-&gt;&gt;A: Open\n    Note over A,B: Preview"), diagrams)
 
         let empty = try MarkdownRenderer.body(for: "")
@@ -145,8 +145,52 @@ enum MarkdownTests {
         try check(MarkdownDocument.supports(file), "Uppercase .MD should be accepted")
         try check(page.contains("<h1 id=\"документ\">Документ</h1>"), "UTF-16 text did not render")
         try check(page.contains("<img src=\"data:image/png;base64,") && page.contains("alt=\"Описание\""), "Local image did not render")
-        try check(page.contains("Сеть") && !page.contains("example.com"), "Remote image should render as alt text")
+        try check(page.contains(#"<img src="https://example.com/image.png" alt="Сеть">"#), "Remote Markdown image was lost")
         try check(!MarkdownDocument.supports(png), "Image must not open as Markdown")
+
+        let inlineHTML = #"""
+        Before <kbd>⌘</kbd> and <mark>important</mark>.
+
+        <details open onclick="blocked()"><summary>Details</summary><strong>Visible</strong></details>
+
+        <table><tr><th>Title</th><td>Value</td></tr></table>
+
+        <figure><img src="https://example.invalid/diagram.svg?one=1&amp;two=2" alt="Diagram" width="320"
+          onerror="blocked()" srcset="https://blocked.invalid/image.png" style="background:url(https://blocked.invalid)"><figcaption>Caption</figcaption></figure>
+
+        <img src="example.png" alt="Local">
+
+        <img src="javascript:blocked()" alt="Missing image">
+
+        <img src="https://user:password@blocked.invalid/x.png" alt="Restricted image">
+
+        <a href="jav&#x61;script:blocked()">Keep link text</a>
+
+        <script>blocked()</script><iframe src="https://blocked.invalid"></iframe>
+        <form action="https://blocked.invalid"><input name="unsafe"></form>
+        <svg><foreignObject><p>Drop foreign markup</p></foreignObject></svg>
+        """#
+        for ext in ["md", "HTML", "htm"] {
+            let document = directory.appendingPathComponent("markup.\(ext)")
+            let source = ext == "md" ? inlineHTML : "<!doctype html><html><head><title>Test</title></head><body>\(inlineHTML)</body></html>"
+            try Data(source.utf8).write(to: document)
+            try check(MarkdownDocument.supports(document), "Markup file should open: \(ext)")
+            let output = try MarkdownDocument.render(document)
+            for expected in [
+                "<kbd>⌘</kbd>", "<mark>important</mark>", #"<details open=""><summary>Details</summary>"#,
+                #"<div class="table-wrap"><table>"#, "<figcaption>Caption</figcaption>",
+                #"src="https://example.invalid/diagram.svg?one=1&amp;two=2""#, #"alt="Diagram" width="320""#,
+                "data:image/png;base64,", "Missing image", "Restricted image", "Keep link text"
+            ] {
+                try check(output.contains(expected), "Missing safe markup in \(ext): \(expected)\n\(output)")
+            }
+            for forbidden in [
+                "<script", "<iframe", "<form", "<input", "<svg", "onerror", "onclick", "srcset",
+                "blocked.invalid", "javascript:", "Drop foreign markup"
+            ] {
+                try check(!output.contains(forbidden), "Unsafe markup in \(ext): \(forbidden)\n\(output)")
+            }
+        }
 
         let includes = directory.appendingPathComponent("chapters", isDirectory: true)
         try FileManager.default.createDirectory(at: includes, withIntermediateDirectories: true)
@@ -204,6 +248,7 @@ enum MarkdownTests {
             <script>alert(1)</script>
             <meta http-equiv="refresh" content="0;url=https://example.invalid">
             <a href="javascript:alert(1)" onclick="alert(1)">Unsafe link</a>
+            <figure><img src="http://example.invalid/figure.png" alt="HTML image" onerror="alert(1)"><figcaption>Caption</figcaption></figure>
             ++++
             """.utf8).write(to: asciiDoc)
             try check(MarkdownDocument.supports(asciiDoc), "AsciiDoc .\(fileExtension) should open")
@@ -212,13 +257,15 @@ enum MarkdownTests {
                 "<h1>AsciiDoc</h1>", "href=\"#_formatting\"", "Viewer supports <strong>strong</strong>",
                 "<em>emphasis</em>", "<code>code</code>", "Notes are numbered.", "Local preview.",
                 "<ul>", "language-swift", "print(\"&lt;tag&gt;\")", "<thead>", "Nested include.",
-                "data:image/png;base64,", "data:image/svg+xml;base64,", "Remote image",
+                "data:image/png;base64,", "data:image/svg+xml;base64,",
+                #"<img src="https://example.invalid/image.png" alt="Remote image">"#,
+                #"<img src="http://example.invalid/figure.png" alt="HTML image">"#,
                 "appendix.adoc%23_appendix", "Unsafe link"
             ] {
                 try check(body.contains(expected), "Missing AsciiDoc HTML: \(expected)\n\(body)")
             }
             for forbidden in [
-                "Excluded paragraph.", "<script", "<meta", "onclick=", "javascript:", "example.invalid"
+                "Excluded paragraph.", "<script", "<meta", "onclick=", "onerror=", "javascript:"
             ] {
                 try check(!body.contains(forbidden), "Unexpected AsciiDoc HTML: \(forbidden)\n\(body)")
             }

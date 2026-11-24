@@ -11,7 +11,7 @@
 "toolbar.openHelp" = "Open a file (⌘O)";
 "toolbar.reloadHelp" = "Reload the file (⌘R)";
 "panel.title" = "Open Document";
-"panel.message" = "Choose one or more Markdown or AsciiDoc files.";
+"panel.message" = "Choose one or more Markdown, HTML, or AsciiDoc files.";
 "menu.about" = "About Markdown Viewer";
 "menu.quit" = "Quit Markdown Viewer";
 "menu.file" = "File";
@@ -31,3 +31,4 @@
 "error.unsupportedEncoding" = "Save the file as ASCII, UTF-8, or UTF-16 with a byte order mark.";
 "error.asciiDocEngine" = "The AsciiDoc renderer could not start.";
 "error.asciiDocConversion" = "The AsciiDoc renderer could not format the document.";
+"error.htmlRender" = "The HTML renderer could not format the document.";

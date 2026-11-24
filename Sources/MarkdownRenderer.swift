@@ -1,7 +1,7 @@
 import Foundation
 
 enum MarkdownRenderer {
-    static func body(for source: String, document: URL? = nil) throws -> String {
+    static func body(for source: String, document: URL? = nil, bundle: Bundle = .main) throws -> String {
         let hasTaskMarkers = source.contains("[ ]") || source.contains("[x]") || source.contains("[X]")
         let options = AttributedString.MarkdownParsingOptions(appliesSourcePositionAttributes: hasTaskMarkers)
         let markdown = try AttributedString(markdown: source, options: options)
@@ -14,9 +14,10 @@ enum MarkdownRenderer {
         var usedAnchors = Set<String>()
         for (offset, run) in runs.enumerated() {
             let block = run.presentationIntent?.components.first
-            if run.inlinePresentationIntent?.contains(.inlineHTML) == true,
-               let anchors = anchorIDs(in: String(markdown[run.range].characters)) {
-                explicitAnchors[offset] = anchors.filter { usedAnchors.insert($0).inserted }
+            if containsHTML(run) {
+                if let anchors = anchorIDs(in: String(markdown[run.range].characters)) {
+                    explicitAnchors[offset] = anchors.filter { usedAnchors.insert($0).inserted }
+                }
             } else if let block, case .header = block.kind {
                 headings[block.identity, default: ""] += String(markdown[run.range].characters)
             }
@@ -26,7 +27,6 @@ enum MarkdownRenderer {
         var stack = [PresentationIntent.IntentType]()
         var codeSource = ""
         var nextColumn = 0
-        var imageBudget = 16 * 1024 * 1024
 
         func closeBlocks(after shared: Int) {
             for block in stack[shared...].reversed() {
@@ -129,15 +129,19 @@ enum MarkdownRenderer {
             case .thematicBreak: break
             case .codeBlock: codeSource += value
             default:
-                if run.inlinePresentationIntent?.contains(.blockHTML) == true {
-                    html += "<pre><code>\(escape(value))</code></pre>"
+                if containsHTML(run) {
+                    html += value
                 } else {
-                    html += inline(value, run: run, document: document, imageBudget: &imageBudget)
+                    html += inline(value, run: run)
                 }
             }
         }
         closeBlocks(after: 0)
-        return html
+        return try HTMLRenderer.body(for: html, document: document, bundle: bundle, markdown: true)
+    }
+
+    private static func containsHTML(_ run: AttributedString.Runs.Run) -> Bool {
+        !(run.inlinePresentationIntent ?? []).intersection([.inlineHTML, .blockHTML]).isEmpty
     }
 
     private static let anchorTag: NSRegularExpression = {
@@ -223,9 +227,7 @@ enum MarkdownRenderer {
         return anchor
     }
 
-    private static func inline(
-        _ value: String, run: AttributedString.Runs.Run, document: URL?, imageBudget: inout Int
-    ) -> String {
+    private static func inline(_ value: String, run: AttributedString.Runs.Run) -> String {
         let intent = run.inlinePresentationIntent ?? []
         if intent.contains(.lineBreak) { return "<br>" }
         if intent.contains(.softBreak) { return " " }
@@ -233,49 +235,16 @@ enum MarkdownRenderer {
         var result = escape(value)
         if let image = run.imageURL {
             let description = value == "\u{FFFC}" ? "" : result
-            if let dataURL = localImage(image, document: document, budget: &imageBudget) {
-                return "<img src=\"\(dataURL)\" alt=\"\(description)\">"
-            }
-            return description
+            return "<img src=\"\(escape(image.relativeString))\" alt=\"\(description)\">"
         }
 
         if intent.contains(.code) { result = "<code>\(result)</code>" }
         if intent.contains(.strikethrough) { result = "<del>\(result)</del>" }
         if intent.contains(.stronglyEmphasized) { result = "<strong>\(result)</strong>" }
         if intent.contains(.emphasized) { result = "<em>\(result)</em>" }
-        if let link = run.link, let href = linkTarget(link, document: document) {
-            result = "<a href=\"\(escape(href))\">\(result)</a>"
+        if let link = run.link {
+            result = "<a href=\"\(escape(link.relativeString))\">\(result)</a>"
         }
         return result
-    }
-
-    static func linkTarget(_ url: URL, document: URL?) -> String? {
-        if url.relativeString.hasPrefix("#") { return url.relativeString }
-        if let scheme = url.scheme?.lowercased(), ["http", "https", "mailto"].contains(scheme) {
-            return url.absoluteString
-        }
-        guard let resolved = URL(string: url.relativeString, relativeTo: document)?.absoluteURL,
-              MarkdownDocument.supports(resolved)
-        else { return nil }
-
-        var target = URLComponents()
-        target.scheme = "markdown-file"
-        target.host = "document"
-        target.queryItems = [URLQueryItem(name: "url", value: resolved.absoluteString)]
-        return target.string
-    }
-
-    static func localImage(_ image: URL, document: URL?, budget: inout Int, allowsSVG: Bool = false) -> String? {
-        let formats = ["png": "png", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif", "webp": "webp"]
-        guard let file = MarkdownDocument.localResource(image, in: document) else { return nil }
-        let ext = file.pathExtension.lowercased()
-        // SVG is embedded as an image resource, with no access to the document DOM.
-        guard let format = allowsSVG && ext == "svg" ? "svg+xml" : formats[ext],
-              let info = try? file.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
-              info.isRegularFile == true, let size = info.fileSize, size <= budget,
-              let data = try? Data(contentsOf: file), data.count <= budget
-        else { return nil }
-        budget -= data.count
-        return "data:image/\(format);base64,\(data.base64EncodedString())"
     }
 }

@@ -31,7 +31,7 @@ struct PreviewPage {
     }
 
     private static func hasDiagrams(in body: String) -> Bool {
-        body.contains("<pre data-mermaid>")
+        body.contains(#"<pre data-mermaid="">"#)
     }
 
     func html(_ body: String, notice: Bool = false) -> String {
@@ -42,7 +42,8 @@ struct PreviewPage {
         <!doctype html>
         <html\(language)><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
+        <meta name="referrer" content="no-referrer">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
         <style>\(style)</style></head>
         <body><main class="\(pageClass)">\(body)</main></body></html>
         """
