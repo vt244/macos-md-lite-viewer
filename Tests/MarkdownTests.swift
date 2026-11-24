@@ -51,6 +51,45 @@ enum MarkdownTests {
             try check(html.contains(expected), "Missing HTML: \(expected)\n\(html)")
         }
         try check(!html.contains("href=\"javascript:") && !html.contains("<script>"), "Unsafe HTML was emitted")
+
+        let anchors = try MarkdownRenderer.body(for: #"""
+        [Stages](#stages) [Alias](#alias)
+
+        <a id="stages" name="stages"></a>
+
+        ## Stages
+
+        <a NAME='alias' ID=other></a>
+        ## Other
+
+        Before <a name="inline"></a> after.
+
+        <a id="stages"></a>
+
+        <a id="unsafe" onclick="alert(1)"></a>
+
+        \<a id="escaped">\</a>
+
+        `<a id="example"></a>`
+
+        ```html
+        <a id="source"></a>
+        ```
+        """#)
+        for expected in [
+            "<a href=\"#stages\">Stages</a>",
+            #"<span id="stages"></span><h2 id="stages-1">Stages</h2>"#,
+            #"<span id="alias"></span><span id="other"></span><h2 id="other-1">Other</h2>"#,
+            #"<p>Before <span id="inline"></span> after.</p>"#,
+            "&lt;a id=&quot;unsafe&quot; onclick=&quot;alert(1)&quot;&gt;",
+            "&lt;a id=&quot;escaped&quot;&gt;&lt;/a&gt;",
+            "<code>&lt;a id=&quot;example&quot;&gt;&lt;/a&gt;</code>",
+            "<code>&lt;a id=&quot;source&quot;&gt;&lt;/a&gt;\n</code>"
+        ] {
+            try check(anchors.contains(expected), "Missing anchor rendering: \(expected)\n\(anchors)")
+        }
+        try check(anchors.components(separatedBy: #"id="stages""#).count == 2, "Duplicate explicit anchor")
+
         let extensions = try MarkdownRenderer.body(for: #"""
         - [x] Finished
         - [ ] Pending

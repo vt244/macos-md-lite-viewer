@@ -8,16 +8,22 @@ enum MarkdownRenderer {
         let sourceLines = hasTaskMarkers
             ? source.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             : []
+        let runs = markdown.runs
         var headings = [Int: String]()
-        for run in markdown.runs {
-            if let block = run.presentationIntent?.components.first, case .header = block.kind {
+        var explicitAnchors = [Int: [String]]()
+        var usedAnchors = Set<String>()
+        for (offset, run) in runs.enumerated() {
+            let block = run.presentationIntent?.components.first
+            if run.inlinePresentationIntent?.contains(.inlineHTML) == true,
+               let anchors = anchorIDs(in: String(markdown[run.range].characters)) {
+                explicitAnchors[offset] = anchors.filter { usedAnchors.insert($0).inserted }
+            } else if let block, case .header = block.kind {
                 headings[block.identity, default: ""] += String(markdown[run.range].characters)
             }
         }
 
         var html = ""
         var stack = [PresentationIntent.IntentType]()
-        var usedAnchors = Set<String>()
         var codeSource = ""
         var nextColumn = 0
         var imageBudget = 16 * 1024 * 1024
@@ -48,8 +54,17 @@ enum MarkdownRenderer {
             stack.removeLast(stack.count - shared)
         }
 
-        for run in markdown.runs {
-            let path = Array((run.presentationIntent?.components ?? []).reversed())
+        for (offset, runIndex) in runs.indices.enumerated() {
+            let run = runs[runIndex]
+            let anchors = explicitAnchors[offset]
+            var path = Array((run.presentationIntent?.components ?? []).reversed())
+            if anchors != nil, let paragraph = path.last, paragraph.kind == .paragraph,
+               stack.last?.identity != paragraph.identity {
+                let next = runs.index(after: runIndex)
+                if next == runs.endIndex || runs[next].presentationIntent?.components.first?.identity != paragraph.identity {
+                    path.removeLast()
+                }
+            }
             var shared = 0
             while shared < min(path.count, stack.count), path[shared] == stack[shared] {
                 shared += 1
@@ -96,6 +111,13 @@ enum MarkdownRenderer {
                 stack.append(block)
             }
 
+            if let anchors {
+                for id in anchors {
+                    html += "<span id=\"\(escape(id))\"></span>"
+                }
+                continue
+            }
+
             var value = String(markdown[run.range].characters)
             if path.count >= 2, shared < path.count - 1,
                path.last?.kind == .paragraph, case .listItem = path[path.count - 2].kind,
@@ -116,6 +138,25 @@ enum MarkdownRenderer {
         }
         closeBlocks(after: 0)
         return html
+    }
+
+    private static let anchorTag: NSRegularExpression = {
+        let attribute = #"(id|name)\s*=\s*(['"]?)([^\s"'<>\x60=&]+)"#
+        return try! NSRegularExpression(
+            pattern: #"\A<a\s+"# + attribute + #"\2(?:\s+"# + attribute + #"\5)?\s*>\s*</a\s*>\z"#,
+            options: .caseInsensitive
+        )
+    }()
+
+    private static func anchorIDs(in html: String) -> [String]? {
+        guard let match = anchorTag.firstMatch(in: html, range: NSRange(html.startIndex..., in: html)),
+              let first = Range(match.range(at: 3), in: html)
+        else { return nil }
+        guard let second = Range(match.range(at: 6), in: html) else { return [String(html[first])] }
+        let firstAttribute = (html as NSString).substring(with: match.range(at: 1)).lowercased()
+        let secondAttribute = (html as NSString).substring(with: match.range(at: 4)).lowercased()
+        guard firstAttribute != secondAttribute else { return nil }
+        return [String(html[first]), String(html[second])]
     }
 
     private static func taskState(
