@@ -36,6 +36,7 @@ final class ViewerWindow: NSWindowController, NSWindowDelegate, NSToolbarDelegat
         )
         super.init(window: window)
 
+        preview.allowsMagnification = true
         window.delegate = self
         window.title = "Markdown Viewer"
         window.minSize = NSSize(width: 430, height: 300)

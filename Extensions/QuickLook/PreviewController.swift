@@ -17,6 +17,7 @@ final class PreviewController: NSViewController, QLPreviewingController, WKNavig
         // Quick Look prepares the document before presenting it. Give WebKit a
         // viewport for that first layout, then follow the host's actual size.
         let container = NSView(frame: NSRect(origin: .zero, size: Self.initialSize))
+        preview.allowsMagnification = true
         preview.navigationDelegate = self
         preview.autoresizingMask = [.width, .height]
         container.addSubview(preview)
