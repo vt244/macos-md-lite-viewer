@@ -72,28 +72,26 @@ enum MarkdownTests {
         try check(extensions.contains("<pre data-mermaid><span class=\"code-language\">mermaid</span>"), extensions)
         try check(extensions.contains("A[&quot;&lt;em&gt;Source&lt;/em&gt;&quot;] --&gt; B"), extensions)
 
-        let quickLook = try MarkdownRenderer.body(for: """
+        let diagrams = try MarkdownRenderer.body(for: """
         ```mermaid
         flowchart LR
-          A["<Start>"] -->|approve| B[End] --> C[Next]
+          subgraph Group
+            A["<Start>"] <--> B[End]
+          end
         ```
 
         ```mermaid
         sequenceDiagram
           participant A as Reader
-          A->>B: Open
-          B-->>A: Preview
+          opt Show preview
+            A->>A: Open
+            Note over A,B: Preview
+          end
         ```
-
-        ```mermaid
-        classDiagram
-          class Example
-        ```
-        """, drawDiagram: QuickLookDiagram.render)
-        try check(quickLook.components(separatedBy: "class=\"quicklook-diagram\"").count == 3, quickLook)
-        try check(quickLook.contains("&lt;Start&gt;") && quickLook.contains(">approve</text>"), quickLook)
-        try check(quickLook.contains(">Reader</text>") && quickLook.contains(">Preview</text>"), quickLook)
-        try check(quickLook.contains("<pre data-mermaid>") && quickLook.contains("classDiagram"), quickLook)
+        """)
+        try check(diagrams.components(separatedBy: "<pre data-mermaid>").count == 3, diagrams)
+        try check(diagrams.contains("subgraph Group\n    A[&quot;&lt;Start&gt;&quot;] &lt;--&gt; B[End]"), diagrams)
+        try check(diagrams.contains("opt Show preview\n    A-&gt;&gt;A: Open\n    Note over A,B: Preview"), diagrams)
 
         let empty = try MarkdownRenderer.body(for: "")
         try check(empty.isEmpty, "Empty Markdown should return an empty body")

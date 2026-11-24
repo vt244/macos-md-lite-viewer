@@ -15,15 +15,14 @@ enum MarkdownDocument {
         return (components?.url ?? url).standardizedFileURL
     }
 
-    static func render(_ url: URL, bundle: Bundle = .main,
-                       drawDiagram: ((String, Int) -> String?)? = nil) throws -> String {
+    static func render(_ url: URL, bundle: Bundle = .main) throws -> String {
         let isAsciiDoc = asciiDocExtensions.contains(url.pathExtension.lowercased())
         let url = url.resolvingSymlinksInPath()
         let (source, _) = try readText(at: url, limit: fileSizeLimit)
         if isAsciiDoc {
             return try AsciiDocRenderer.body(for: source, document: url, bundle: bundle)
         }
-        return try MarkdownRenderer.body(for: source, document: url, drawDiagram: drawDiagram)
+        return try MarkdownRenderer.body(for: source, document: url)
     }
 
     static func readText(at url: URL, limit: Int) throws -> (text: String, size: Int) {

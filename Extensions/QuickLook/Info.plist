@@ -14,12 +14,12 @@
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionPointIdentifier</key><string>com.apple.quicklook.preview</string>
-        <key>NSExtensionPrincipalClass</key><string>MarkdownQuickLookPreviewProvider</string>
+        <key>NSExtensionPrincipalClass</key><string>MarkdownQuickLookPreviewController</string>
         <key>NSExtensionAttributes</key>
         <dict>
             <key>QLSupportedContentTypes</key>
             <array><string>net.daringfireball.markdown</string><string>org.asciidoctor.asciidoc</string></array>
-            <key>QLIsDataBasedPreview</key><true/>
+            <key>QLIsDataBasedPreview</key><false/>
         </dict>
     </dict>
 </dict>
