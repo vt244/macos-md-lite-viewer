@@ -11,7 +11,7 @@
 "toolbar.openHelp" = "Открыть файл (⌘O)";
 "toolbar.reloadHelp" = "Перечитать файл (⌘R)";
 "panel.title" = "Открыть документ";
-"panel.message" = "Выберите один или несколько файлов Markdown или AsciiDoc.";
+"panel.message" = "Выберите один или несколько файлов Markdown, HTML или AsciiDoc.";
 "menu.about" = "О Markdown Viewer";
 "menu.quit" = "Завершить Markdown Viewer";
 "menu.file" = "Файл";
@@ -31,3 +31,4 @@
 "error.unsupportedEncoding" = "Сохраните файл в ASCII, UTF-8 или UTF-16 с меткой порядка байтов.";
 "error.asciiDocEngine" = "Не удалось запустить обработчик AsciiDoc.";
 "error.asciiDocConversion" = "Не удалось отобразить разметку AsciiDoc.";
+"error.htmlRender" = "Не удалось отобразить разметку HTML.";

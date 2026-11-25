@@ -1,43 +1,43 @@
 import Foundation
 
 enum MarkdownRenderer {
-    static func body(
-        for source: String, document: URL? = nil, drawDiagram: ((String, Int) -> String?)? = nil
-    ) throws -> String {
+    static func body(for source: String, document: URL? = nil, bundle: Bundle = .main) throws -> String {
         let hasTaskMarkers = source.contains("[ ]") || source.contains("[x]") || source.contains("[X]")
         let options = AttributedString.MarkdownParsingOptions(appliesSourcePositionAttributes: hasTaskMarkers)
         let markdown = try AttributedString(markdown: source, options: options)
         let sourceLines = hasTaskMarkers
             ? source.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
             : []
+        let runs = markdown.runs
         var headings = [Int: String]()
-        for run in markdown.runs {
-            if let block = run.presentationIntent?.components.first, case .header = block.kind {
+        var explicitAnchors = [Int: [String]]()
+        var usedAnchors = Set<String>()
+        for (offset, run) in runs.enumerated() {
+            let block = run.presentationIntent?.components.first
+            if containsHTML(run) {
+                if let anchors = anchorIDs(in: String(markdown[run.range].characters)) {
+                    explicitAnchors[offset] = anchors.filter { usedAnchors.insert($0).inserted }
+                }
+            } else if let block, case .header = block.kind {
                 headings[block.identity, default: ""] += String(markdown[run.range].characters)
             }
         }
 
         var html = ""
         var stack = [PresentationIntent.IntentType]()
-        var usedAnchors = Set<String>()
         var codeSource = ""
         var nextColumn = 0
-        var imageBudget = 16 * 1024 * 1024
 
         func closeBlocks(after shared: Int) {
             for block in stack[shared...].reversed() {
                 switch block.kind {
                 case let .codeBlock(language):
                     let isMermaid = language?.trimmingCharacters(in: .whitespaces).lowercased() == "mermaid"
-                    if isMermaid, let diagram = drawDiagram?(codeSource, block.identity) {
-                        html += diagram
-                    } else {
-                        html += isMermaid ? "<pre data-mermaid>" : "<pre>"
-                        if let language, !language.isEmpty {
-                            html += "<span class=\"code-language\">\(escape(language))</span>"
-                        }
-                        html += "<code>\(escape(codeSource))</code></pre>"
+                    html += isMermaid ? "<pre data-mermaid>" : "<pre>"
+                    if let language, !language.isEmpty {
+                        html += "<span class=\"code-language\">\(escape(language))</span>"
                     }
+                    html += "<code>\(escape(codeSource))</code></pre>"
                 case .table: html += "</table></div>"
                 case .tableHeaderRow, .tableRow:
                     let columns = tableColumns(in: stack)
@@ -54,8 +54,17 @@ enum MarkdownRenderer {
             stack.removeLast(stack.count - shared)
         }
 
-        for run in markdown.runs {
-            let path = Array((run.presentationIntent?.components ?? []).reversed())
+        for (offset, runIndex) in runs.indices.enumerated() {
+            let run = runs[runIndex]
+            let anchors = explicitAnchors[offset]
+            var path = Array((run.presentationIntent?.components ?? []).reversed())
+            if anchors != nil, let paragraph = path.last, paragraph.kind == .paragraph,
+               stack.last?.identity != paragraph.identity {
+                let next = runs.index(after: runIndex)
+                if next == runs.endIndex || runs[next].presentationIntent?.components.first?.identity != paragraph.identity {
+                    path.removeLast()
+                }
+            }
             var shared = 0
             while shared < min(path.count, stack.count), path[shared] == stack[shared] {
                 shared += 1
@@ -102,6 +111,13 @@ enum MarkdownRenderer {
                 stack.append(block)
             }
 
+            if let anchors {
+                for id in anchors {
+                    html += "<span id=\"\(escape(id))\"></span>"
+                }
+                continue
+            }
+
             var value = String(markdown[run.range].characters)
             if path.count >= 2, shared < path.count - 1,
                path.last?.kind == .paragraph, case .listItem = path[path.count - 2].kind,
@@ -113,15 +129,38 @@ enum MarkdownRenderer {
             case .thematicBreak: break
             case .codeBlock: codeSource += value
             default:
-                if run.inlinePresentationIntent?.contains(.blockHTML) == true {
-                    html += "<pre><code>\(escape(value))</code></pre>"
+                if containsHTML(run) {
+                    html += value
                 } else {
-                    html += inline(value, run: run, document: document, imageBudget: &imageBudget)
+                    html += inline(value, run: run)
                 }
             }
         }
         closeBlocks(after: 0)
-        return html
+        return try HTMLRenderer.body(for: html, document: document, bundle: bundle, markdown: true)
+    }
+
+    private static func containsHTML(_ run: AttributedString.Runs.Run) -> Bool {
+        !(run.inlinePresentationIntent ?? []).intersection([.inlineHTML, .blockHTML]).isEmpty
+    }
+
+    private static let anchorTag: NSRegularExpression = {
+        let attribute = #"(id|name)\s*=\s*(['"]?)([^\s"'<>\x60=&]+)"#
+        return try! NSRegularExpression(
+            pattern: #"\A<a\s+"# + attribute + #"\2(?:\s+"# + attribute + #"\5)?\s*>\s*</a\s*>\z"#,
+            options: .caseInsensitive
+        )
+    }()
+
+    private static func anchorIDs(in html: String) -> [String]? {
+        guard let match = anchorTag.firstMatch(in: html, range: NSRange(html.startIndex..., in: html)),
+              let first = Range(match.range(at: 3), in: html)
+        else { return nil }
+        guard let second = Range(match.range(at: 6), in: html) else { return [String(html[first])] }
+        let firstAttribute = (html as NSString).substring(with: match.range(at: 1)).lowercased()
+        let secondAttribute = (html as NSString).substring(with: match.range(at: 4)).lowercased()
+        guard firstAttribute != secondAttribute else { return nil }
+        return [String(html[first]), String(html[second])]
     }
 
     private static func taskState(
@@ -188,9 +227,7 @@ enum MarkdownRenderer {
         return anchor
     }
 
-    private static func inline(
-        _ value: String, run: AttributedString.Runs.Run, document: URL?, imageBudget: inout Int
-    ) -> String {
+    private static func inline(_ value: String, run: AttributedString.Runs.Run) -> String {
         let intent = run.inlinePresentationIntent ?? []
         if intent.contains(.lineBreak) { return "<br>" }
         if intent.contains(.softBreak) { return " " }
@@ -198,49 +235,16 @@ enum MarkdownRenderer {
         var result = escape(value)
         if let image = run.imageURL {
             let description = value == "\u{FFFC}" ? "" : result
-            if let dataURL = localImage(image, document: document, budget: &imageBudget) {
-                return "<img src=\"\(dataURL)\" alt=\"\(description)\">"
-            }
-            return description
+            return "<img src=\"\(escape(image.relativeString))\" alt=\"\(description)\">"
         }
 
         if intent.contains(.code) { result = "<code>\(result)</code>" }
         if intent.contains(.strikethrough) { result = "<del>\(result)</del>" }
         if intent.contains(.stronglyEmphasized) { result = "<strong>\(result)</strong>" }
         if intent.contains(.emphasized) { result = "<em>\(result)</em>" }
-        if let link = run.link, let href = linkTarget(link, document: document) {
-            result = "<a href=\"\(escape(href))\">\(result)</a>"
+        if let link = run.link {
+            result = "<a href=\"\(escape(link.relativeString))\">\(result)</a>"
         }
         return result
-    }
-
-    static func linkTarget(_ url: URL, document: URL?) -> String? {
-        if url.relativeString.hasPrefix("#") { return url.relativeString }
-        if let scheme = url.scheme?.lowercased(), ["http", "https", "mailto"].contains(scheme) {
-            return url.absoluteString
-        }
-        guard let resolved = URL(string: url.relativeString, relativeTo: document)?.absoluteURL,
-              MarkdownDocument.supports(resolved)
-        else { return nil }
-
-        var target = URLComponents()
-        target.scheme = "markdown-file"
-        target.host = "document"
-        target.queryItems = [URLQueryItem(name: "url", value: resolved.absoluteString)]
-        return target.string
-    }
-
-    static func localImage(_ image: URL, document: URL?, budget: inout Int, allowsSVG: Bool = false) -> String? {
-        let formats = ["png": "png", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif", "webp": "webp"]
-        guard let file = MarkdownDocument.localResource(image, in: document) else { return nil }
-        let ext = file.pathExtension.lowercased()
-        // SVG is embedded as an image resource, with no access to the document DOM.
-        guard let format = allowsSVG && ext == "svg" ? "svg+xml" : formats[ext],
-              let info = try? file.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
-              info.isRegularFile == true, let size = info.fileSize, size <= budget,
-              let data = try? Data(contentsOf: file), data.count <= budget
-        else { return nil }
-        budget -= data.count
-        return "data:image/\(format);base64,\(data.base64EncodedString())"
     }
 }

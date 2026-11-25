@@ -8,18 +8,18 @@
     <key>CFBundleName</key><string>Markdown Viewer</string>
     <key>CFBundleDisplayName</key><string>Markdown Viewer</string>
     <key>CFBundlePackageType</key><string>XPC!</string>
-    <key>CFBundleShortVersionString</key><string>0.2.0</string>
-    <key>CFBundleVersion</key><string>10</string>
+    <key>CFBundleShortVersionString</key><string>0.2.1</string>
+    <key>CFBundleVersion</key><string>15</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionPointIdentifier</key><string>com.apple.quicklook.preview</string>
-        <key>NSExtensionPrincipalClass</key><string>MarkdownQuickLookPreviewProvider</string>
+        <key>NSExtensionPrincipalClass</key><string>MarkdownQuickLookPreviewController</string>
         <key>NSExtensionAttributes</key>
         <dict>
             <key>QLSupportedContentTypes</key>
-            <array><string>net.daringfireball.markdown</string><string>org.asciidoctor.asciidoc</string></array>
-            <key>QLIsDataBasedPreview</key><true/>
+            <array><string>net.daringfireball.markdown</string><string>org.asciidoctor.asciidoc</string><string>public.html</string></array>
+            <key>QLIsDataBasedPreview</key><false/>
         </dict>
     </dict>
 </dict>
